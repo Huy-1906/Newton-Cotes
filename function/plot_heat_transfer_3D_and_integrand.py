@@ -34,7 +34,7 @@ def plot_heat_transfer_3D_and_integrand(x_nodes, k_values, y_values, L, k_func, 
     K_values_mesh = k_func(X) # k(x) không đổi theo y
     
     # Thiết lập colormap
-    cmap_name = 'viridis' 
+    cmap_name = 'jet' 
     cmap = cm.get_cmap(cmap_name)
     norm = Normalize(vmin=np.min(k_values), vmax=np.max(k_values))
     
