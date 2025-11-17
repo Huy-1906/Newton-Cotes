@@ -99,13 +99,31 @@ File mô tả các thuật toán Newton–Cotes (composite closed), giao diện 
 
   Đây là nghiệm phân tích dùng để so sánh với kết quả số (khi n đủ lớn).
 
-  ### Test Case 3 — FEM (Tính tổng lực phân bố và mô phỏng 2D)
+  ### Test Case 3 — FEM (Tính tổng lực phân bố và mô phỏng ứng suất phẳng 2D)
 
-  - Mục tiêu: sử dụng Newton–Cotes để tích phân hàm tải phân bố theo mép dầm (ví dụ parabolic),
-    sau đó dùng tổng lực P tính được làm tải cho mô phỏng phần tử hữu hạn (FEM) 2D. Test Case 3
-    minh họa một ứng dụng thực tế của tích phân số: chuyển một phân bố tải liên tục thành một lực
-    rời rạc để sử dụng trong lưới phần tử.
+**Mục tiêu:**
+Mô phỏng bài toán ứng suất phẳng (như trong file `problem18.py`), nhưng thay vì dùng một tải trọng tổng `P` giả định (ví dụ: `P = 1e6`), chúng ta sẽ tính toán `P` từ một **hàm tải trọng phân bố không đều** $q(y)$ bằng phương pháp Newton-Cotes.
 
+**Quy trình thực hiện trong `test_case_3.py`:**
+
+**Phần A: Tính Tổng Lực (P) bằng Newton-Cotes**
+
+1.  **Bài toán:** Một dầm console (ngàm 1 đầu) chịu tải trọng phân bố không đều $q(y)$ dọc theo mép bên phải (chiều cao $L_y = 1.0$ m).
+2.  **Hàm tải trọng:** Giả sử tải trọng có dạng Parabolic, đạt đỉnh ở giữa mép:
+    $q(y) = P_{\text{peak}} \cdot (1 - ( \frac{y - L_y/2}{L_y/2} )^2)$
+    (Với $P_{\text{peak}} = -1.5 \times 10^6$ N/m)
+3.  **Tích phân:** Tổng lực `P` chính là tích phân của hàm tải trọng này trên toàn bộ chiều cao:
+    $P = \int_{0}^{L_y} q(y) \,dy$
+4.  **Áp dụng:** Chúng ta dùng hàm `simpson_1_3_composite(q_values, h)` để tính giá trị `P_calculated` một cách chính xác.
+
+**Phần B: Mô phỏng FEM với Tải trọng (P) đã tính**
+
+1.  **Đầu vào:** Giá trị `P_calculated` (khoảng $-1.0 \times 10^6$ N) từ Phần A được dùng làm tổng lực `P` cho code FEM.
+2.  **Mô phỏng:** Toàn bộ phần code của `problem18.py` được thực thi (chia lưới, lập ma trận độ cứng, áp dụng điều kiện biên).
+3.  **Phân bố tải:** Code FEM tiếp tục phân bố tổng lực `P` này về các nút trên mép phải (bằng phương pháp nội bộ của nó, tương tự Quy tắc Hình thang).
+4.  **Kết quả:** Script giải hệ phương trình và xuất ra hình ảnh mô phỏng dầm bị biến dạng, tô màu trường chuyển vị `U XX`.
+
+**Ý nghĩa:** Test case này chứng minh cách các phương pháp Newton-Cotes (Chủ đề 2) được sử dụng làm công cụ tiền xử lý (pre-processing) quan trọng để cung cấp dữ liệu đầu vào chính xác cho các phương pháp phân tích kỹ thuật phức tạp (như FEM, vốn dựa trên Tích phân Gauss - Chủ đề 3)
   - Tóm tắt quy trình trong `test_casse_3.py`:
     - Tạo phân bố tải `q(y)` parabolic trên mép (ví dụ `P_peak = -1.5e6` N/m), lưới tích phân 1D trên `y in [0, Ly]`.
     - Dùng `simpson_1_3_composite(q_values, h_integral)` để tính tổng lực `P_calculated`.
