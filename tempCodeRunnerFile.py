@@ -1,0 +1,1 @@
+print("\nĐã lưu hình ảnh 'Mo_phong_truyen_nhiet_3D_va_tich_phan.png'.")
