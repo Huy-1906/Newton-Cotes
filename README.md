@@ -99,28 +99,73 @@ File mô tả các thuật toán Newton–Cotes (composite closed), giao diện 
 
   Đây là nghiệm phân tích dùng để so sánh với kết quả số (khi n đủ lớn).
 
+  ### Test Case 3 — FEM (Tính tổng lực phân bố và mô phỏng 2D)
+
+  - Mục tiêu: sử dụng Newton–Cotes để tích phân hàm tải phân bố theo mép dầm (ví dụ parabolic),
+    sau đó dùng tổng lực P tính được làm tải cho mô phỏng phần tử hữu hạn (FEM) 2D. Test Case 3
+    minh họa một ứng dụng thực tế của tích phân số: chuyển một phân bố tải liên tục thành một lực
+    rời rạc để sử dụng trong lưới phần tử.
+
+  - Tóm tắt quy trình trong `test_casse_3.py`:
+    - Tạo phân bố tải `q(y)` parabolic trên mép (ví dụ `P_peak = -1.5e6` N/m), lưới tích phân 1D trên `y in [0, Ly]`.
+    - Dùng `simpson_1_3_composite(q_values, h_integral)` để tính tổng lực `P_calculated`.
+    - Phân bố `P_calculated` lên các nút mép phải của lưới FEM, ráp ma trận độ cứng, áp điều kiện biên, giải hệ,
+      và vẽ lưới biến dạng + trường dịch chuyển.
+
+  - File kết quả: `Test_Case_3_Mo_phong_ung_suat_phang.png` (hình lưới biến dạng với màu biểu diễn dịch chuyển UX).
+
+  ## Mô tả chi tiết các module trong `function/test_case_3/`
+
+  Dưới đây là mô tả ngắn gọn về từng file trong `function/test_case_3/` — vai trò, giao diện chính (inputs/outputs),
+  và các phụ thuộc quan trọng.
+
+  - `rectangularMesh.py`:
+    - Vai trò: sinh lưới chữ nhật đều cho miền 2D (tạo `nodeCoordinates` và `elementNodes`).
+    - Giao diện: `rectangularMesh(Lx, Ly, nx, ny)` → `(nodeCoordinates, elementNodes)`.
+
+  - `shapeFunctionQ4.py`:
+    - Vai trò: cung cấp hàm hình dạng và đạo hàm cho phần tử Q4 (4 nút).
+    - Giao diện: `shapeFunctionQ4(xi, eta)` → `(N, dN_dxi, dN_deta)`.
+
+  - `gaussQuadrature.py`:
+    - Vai trò: trả về điểm Gauss và trọng số cho tích phân trên phần tử (1D hoặc 2D).
+    - Giao diện: `gaussQuadrature(order)` → `(points, weights)`.
+
+  - `Jacobian.py`:
+    - Vai trò: tính ma trận Jacobian, định thức và nghịch đảo để biến đổi đạo hàm từ hệ xi-eta sang hệ x-y.
+    - Giao diện: `Jacobian(dN_dxi, node_coords)` → `(J, detJ, invJ)`.
+
+  - `formStiffness2D.py`:
+    - Vai trò: lắp ráp ma trận độ cứng toàn cục (và ma trận khối lượng nếu cần) bằng cách lặp qua các phần tử,
+      sử dụng `shapeFunctionQ4`, `gaussQuadrature` và `Jacobian` để tính ma trận phần tử.
+    - Giao diện: `formStiffness2D(GDof, numberElements, elementNodes, numberNodes, nodeCoordinates, C, rho, thickness)` → `(stiffness, mass)`.
+
+  - `solution.py`:
+    - Vai trò: áp điều kiện biên, giải hệ tuyến tính và trả về vectơ dịch chuyển đầy đủ.
+    - Giao diện: `solution(GDof, prescribedDof, stiffness, force)` → `displacements`.
+
+  - `drawingMesh.py` và `drawingField.py`:
+    - Vai trò: hàm trợ giúp hiển thị lưới (mesh) và trường (field) trên Matplotlib; thường gọi `drawingMesh(ax, coords, elems, 'Q4', style)`
+      và `drawingField(ax, coords, elems, 'Q4', values)`.
+
+  - `stresses2D.py`:
+    - Vai trò: tính ứng suất (σ_xx, σ_yy, σ_xy) từ vectơ dịch chuyển và ma trận vật liệu `C` tại điểm Gauss hoặc nút.
+
+  - `plot_results.py` (được tinh chỉnh cho FEM):
+    - Vai trò: lưu/hiển thị các hình ảnh hậu xử lý (ví dụ contour, deformed mesh) phù hợp với output của `test_casse_3.py`.
+
+  - `simpson_1_3_composite.py`, `simpson_3_8_composite.py`, `trapezoidal_composite.py` (bản trong `test_case_3`):
+    - Vai trò: cùng chức năng Newton–Cotes như các bản chính; sử dụng trực tiếp để tích phân q(y) hoặc các hàm 1D khác.
+
+  - Ghi chú: nhiều module phụ thuộc lẫn nhau — ví dụ `formStiffness2D.py` gọi `gaussQuadrature`, `Jacobian` và `shapeFunctionQ4`.
+    Kiểm tra đường dẫn và import khi di chuyển các file hoặc khi chuẩn hóa thư viện.
+
+
   ## Đồ thị và đầu ra
 
   - `plot_results(x, y, title)` lưu đồ 2D (vùng tô tích phân và điểm nút) cho mỗi test case.
   - `plot_heat_transfer_3D_and_integrand(...)` tạo mô phỏng 3D (khi có) và đồng thời vẽ hàm integrand `y(x)` với vùng tô, lưu ảnh `Mo_phong_truyen_nhiet_3D_va_tich_phan.png`.
 
-  Kiểm tra thư mục `pic/` hoặc thư mục làm việc để lấy ảnh đầu ra.
-
-  ## Cách chạy nhanh
-
-  1) Cài thư viện (nếu chưa có):
-
-  ```bash
-  pip install numpy matplotlib scipy
-  ```
-
-  2) Chạy chương trình:
-
-  ```bash
-  python main.py
-  ```
-
-  3) Mở ảnh được lưu để xem đồ thị và mô phỏng 3D.
 
   ## Gợi ý mở rộng
 
