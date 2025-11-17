@@ -153,4 +153,3 @@ python main.py
 
 3) Các đồ thị sẽ được lưu (xem thư mục làm việc hoặc `pic/`).
 
-# Newton-Cotes
